@@ -4,7 +4,8 @@
   "description": "Node.js Express Rest APIs to Upload/Download Files",
   "main": "server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "devStart" : "nodemon server.js"
   },
   "keywords": [
     "node js",
@@ -19,8 +20,15 @@
   "author": "bezkoder",
   "license": "ISC",
   "dependencies": {
+    "@types/socket.io": "^3.0.2",
     "cors": "^2.8.5",
     "express": "^4.17.1",
-    "multer": "^1.4.2"
+    "multer": "^1.4.2",
+    "socket.io": "^4.3.1",
+    "xlsx": "^0.17.3"
+  },
+  "devDependencies": {
+    "dotenv": "^10.0.0",
+    "nodemon": "^2.0.14"
   }
 }
