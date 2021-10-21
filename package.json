@@ -5,7 +5,7 @@
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "devStart" : "nodemon server.js"
+    "devStart": "nodemon server.js"
   },
   "keywords": [
     "node js",
@@ -25,6 +25,7 @@
     "express": "^4.17.1",
     "multer": "^1.4.2",
     "socket.io": "^4.3.1",
+    "tedious": "^14.0.0",
     "xlsx": "^0.17.3"
   },
   "devDependencies": {

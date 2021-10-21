@@ -3,19 +3,26 @@
 
     "scenario": {
         "dataPath": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/upload/scenarios/",
-        "excelTemplate" : "template/scenario.xlsx"
+        "excelTemplate" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/scenario.xlsx"
     },
   
 
     "contract" : {
         "dataPath" :"/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/upload/contracts/",
-        "excelTemplate" : "template/contract.xlsx"
+        "excelTemplate" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/contract.xlsx"
     },
 
     "arcserver": {
         "defaultconfiguration":"/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/ARC/DefaultConfig/",
-        "serverinstancetemplate": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/ARC/server.instance_template",
+        "serverinstancetemplate": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/server.instance_template",
         "tempfolder" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/tmp"
+    },
+
+    "databaseserver":{
+        "server": "localhost",
+        "port": "1433",
+        "login": "sa",
+        "password": "Almonde01$"
     }
 }
 

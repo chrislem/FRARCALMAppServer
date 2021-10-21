@@ -2,8 +2,6 @@ const uploadFile = require("../middleware/upload");
 const fs = require("fs");
 const baseUrl = "http://localhost:8080/";
 const config = require('../../resources/config/config.json');
-
-const filecheck = require("../middleware/filecheck")
 const { exec } = require('child_process');
 let ARCServer = require('./arcserver.controller').ARCServer;
 
@@ -62,15 +60,17 @@ const getPortfolios = (req, res) => {
     } while (currentDate - date < milliseconds);
   }
 
-function startComputation(socket, data){
+async function startComputation(socket, data){
   let arcServer = new ARCServer(socket, data);
 
-  socket.emit('notification', 'Init computation');
+  await socket.emit('notification', 'Init computation');
   res = arcServer.initComputation();
   console.log(res)
-  socket.emit('notification', res);
+  await socket.emit('notification', res);
   res = arcServer.extractImportFiles();
-  socket.emit('notification', res);
+  await socket.emit('notification', res);
+  res = await arcServer.createEnvironment();
+  await socket.emit('notification', "Environment created: "+res);
   
 }
 

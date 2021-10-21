@@ -3,9 +3,6 @@ const fs = require("fs");
 const baseUrl = "http://localhost:8080/";
 const config = require('../../resources/config/config.json');
 
-const filecheck = require("../middleware/filecheck")
-
-
 
 const upload = async (req, res) => {
 

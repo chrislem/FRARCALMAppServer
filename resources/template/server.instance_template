@@ -1,0 +1,35 @@
+{
+
+	ALMExternalConfigurationPath = "$$ConfigurationPath$$";
+    ALMExternalDataPath          = "$$DataPath$$";
+
+// --------------------------------------------------------------------------
+// A l m o n d e   R e p o s i t o r y   c o n f i g u r a t i o n
+// --------------------------------------------------------------------------
+
+    CFGDatabaseType    = SQLServer;
+    CFGServer          = "$$DBServer$$";
+	CFGPort = "$$DBPort$$";
+    CFGDatabaseVersion = SQLServer2017;
+    CFGSQLServerODBCDriver = "Microsoft17";
+
+    CFGDatabase     = "$$DBName";
+    CFGUser         = "$$DBUser";
+    CFGPassword     = "$$DBPassword";
+
+    ALMAllowCommandExecutionAssistants= YES;
+
+    ALMDefaultFilesEncoding           = ISOLatin1;
+    ALMServerAvailablePortNumberCount = 10;
+	ALMLicenseCheckDisabled = YES;
+
+    ALMDispatcherPortNumber  = 10103;
+    ALMHTTPPortNumber  = 8080;
+    ALMHTTPDisabled    = YES;
+    ALMAdminPanelEnabled = NO;
+    ALMServerFirstAvailablePortNumber = 12200;
+    ALMServerAvailablePortNumberCount = 100;
+
+}
+
+
