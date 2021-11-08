@@ -1,28 +1,123 @@
 {
-    "resourcePath" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/",
-
+    "resourcePath": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/",
     "scenario": {
         "dataPath": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/upload/scenarios/",
-        "excelTemplate" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/scenario.xlsx"
+        "excelTemplate": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/scenario_template.xlsx"
     },
-  
-
-    "contract" : {
-        "dataPath" :"/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/upload/contracts/",
-        "excelTemplate" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/contract.xlsx"
+    "contract": {
+        "dataPath": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/upload/contracts/",
+        "excelTemplate": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/contracts_template.xlsx"
     },
-
     "arcserver": {
-        "defaultconfiguration":"/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/ARC/DefaultConfig/",
+        "defaultconfiguration": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/Temp/ALMApp_config/EXPORT",
         "serverinstancetemplate": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/template/server.instance_template",
-        "tempfolder" : "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/tmp"
+        "tempfolder": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRAPPALMData/tmp",
+        "release": "/Users/lemierec/Developer/AlmondeFactory/develop/Almonde/Executable/Almonde",
+        "repository": {
+            "createMethod": "dockerDev",
+            "backupFile": "/Users/lemierec/Developer/Projet/Angular/FRAPPALM/FRARCALMAppServer/resources/arc/backup/FRARCAPP.bak"
+        }
     },
-
-    "databaseserver":{
+    "databaseserver": {
         "server": "localhost",
         "port": "1433",
         "login": "sa",
         "password": "Almonde01$"
+    },
+    "extractFileForStatic": [
+        {
+            "refFile": "portfolio",
+            "tab": "Contracts",
+            "uniqueColumns": [
+                "Currency"
+            ],
+            "outputFile": "StaticData_Currency.almGenericFile"
+        },
+        {
+            "refFile": "scenario",
+            "tab": "RateSurfaceHistory",
+            "uniqueColumns": [
+                "Currency",
+                "HistoryName"
+            ],
+            "separator": ".",
+            "outputFile": "StaticData_RateSurface.almGenericFile"
+        },
+        {
+            "refFile": "scenario",
+            "tab": "IndexHistory",
+            "uniqueColumns": [
+                "HistoryName"
+            ],
+            "outputFile": "StaticData_Index.almGenericFile"
+        },
+        {
+            "fixedValues": [
+                "FRALMApp"
+            ],
+            "outputFile": "StaticData_Source.almGenericFile"
+        }
+    ],
+    "process": {
+        "arcuser": "configadmin",
+        "arcpassword": "configadmin",
+        "import": [
+            "1_StaticDataImport",
+            "2_HierarchyImport",
+            "3_MarketDataImport",
+            "4_ScenarioImport",
+            "5_ContractImport"
+        ],
+        "computation": [
+            "7_ALMComputation"
+        ],
+        "report": []
+    },
+    "frontConfiguration": {
+        "factsList": [
+            "Outstanding Principal",
+            "Duration",
+            "Dynamic Duration",
+            "Average Bucket Return",
+            "Average Outstanding Principal",
+            "O.P. known rate",
+            "O.P. known rate GAP",
+            "O.P. GAP",
+            "Average O.P. known rate",
+            "Average O.P. known rate GAP",
+            "Average O.P. GAP",
+            "Principal Payment",
+            "Interest Payment",
+            "Interest and Principal Payment",
+            "Discounted Principal Payment",
+            "Discounted Interest Payment",
+            "Discounted Interest and Principal Payment",
+            "Accrued Interest",
+            "Interest Margin",
+            "NPV",
+            "FTP",
+            "IRR at B.S.D.",
+            "IRR at O.D.",
+            "Dynamic NPV",
+            "Dynamic NPV GAP",
+            "Known Rate Principal Payment",
+            "Known Rate Interest Payment",
+            "Known Rate Interest And Principal Payment",
+            "Known Rate Discounted Principal Payment",
+            "Known Rate Discounted Interest Payment",
+            "Known Rate Discounted Interest And Principal Payment",
+            "Cumulative Principal Payment",
+            "Cumulative Interest Payment",
+            "Cumulative Interest And Principal Payment",
+            "Income",
+            "CleanRecognitionValue",
+            "RecognitionValue",
+            "RecognitionValueAtBSD",
+            "CleanRecognitionValueAtBSD",
+            "PrepaymentPP",
+            "BehAmortPP",
+            "Key Rate Duration",
+            "NPV Delta"
+        ]
     }
 }
-

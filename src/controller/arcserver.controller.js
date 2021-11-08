@@ -1,8 +1,10 @@
 const config = require('../../resources/config/config.json');
 const excelservice = require('./excelservice')
+const dbmanager = require('./dbmanager')
 const fs = require("fs");
-var Connection = require('tedious').Connection;
-var Request = require('tedious').Request;
+//const { execSync } = require("child_process");
+const processmanager = require('./processmanager')
+
 
 var configDB =  
 {
@@ -17,136 +19,268 @@ var configDB =
     }
   };
 
-class ARCServer
-{
-    constructor(socket, computationData)
-   { this.socket = socket;
-    this.computationData = computationData;
-    }
+  function dateToYMD(date) {
+    var d = date.getDate();
+    var m = date.getMonth() + 1; //Month from 0 to 11
+    var y = date.getFullYear();
+    return '' + y  + (m<=9 ? '0' + m : m) + (d <= 9 ? '0' + d : d);
+  }
+
+  
+function createStaticData(socket, data, dest){
+    console.log("Create StaticData");
+
+    var staticdata = config.extractFileForStatic;
     
-    initComputation(){
-        //Create folder for data
-        console.log("Socket ID"+this.socket.id);
-        console.log("data"+this.computationData);
-        
-        if (!fs.existsSync(config.arcserver.tempfolder)){
-            return "Temporary folder does'nt exist"
+    staticdata.forEach(sd => {
+        let stringtowrite = "StaticDataKey\tStaticDataValue\tStaticDataDescription\n";
+        let res
+        if(sd.refFile === undefined){
+            console.log("flat file")
+            res = sd.fixedValues
         }
-        
-        // var sessionFolder = config.arcserver.tempfolder+"/"+this.socket.id;
-        // try {
-        //     const parent = config.arcserver.tempfolder;
-        //     const dirnames  = [this.socket.id, this.socket.id+"/config", this.socket.id+"/data", this.socket.id+"/script"];
-        
-        //     await Promise.all(
-        //       dirnames.map(dirname => fsPromises.mkdir(`${parent}/${dirname}`).catch(console.error))
-        //     );
-        
-        //     // All dirs are created here or errors reported.
-        //   } catch (err) {
-        //     console.error(err);
-        //   }
-        const parent = config.arcserver.tempfolder+"/"+this.socket.id;
-        const dirnames  = [ "config", "data", "script"];
-        
-        var dir = config.arcserver.tempfolder+"/"+this.socket.id;
-
-        fs.mkdirSync(dir);
-        fs.mkdirSync(dir + '/config');
-        fs.mkdirSync(dir + '/data');
-        fs.mkdirSync(dir + '/script');
-
-        console.log("folder created");
-        
-        return "Initialisation OK";
-    }
-
-     extractImportFiles()
-    {
-        //extract portfolio file
-        console.log("Portfolio file:" + this.computationData.portfolio);
-        var res = excelservice.extractFilesFromExcelWithTemplate(config.arcserver.tempfolder+"/"+this.socket.id+"/data", config.contract.dataPath+this.computationData.portfolio, config.contract.excelTemplate);
-
-        if(res == false)
-            return "Extract Contract file failed";
-
-        //extract scenario files
-        console.log("Scenario file:" + this.computationData.scenario);
-        var res = excelservice.extractFilesFromExcelWithTemplate(config.arcserver.tempfolder+"/"+this.socket.id+"/data", config.scenario.dataPath+this.computationData.scenario, config.scenario.excelTemplate);
-
-        if(res == false)
-            return "Extract Contract file failed";
-
-        return "Extract files OK";
-    }
-
-    async createEnvironment(){
-        //Connect to database
-        var connection = new Connection(configDB);
-
-        var dbname = (new Date()).getTime().toString(36) + Math.random().toString(36).slice(2);
-        // Setup event handler when the connection is established. 
-        connection.on('connect', function(err) {
-          if(err) {
-            console.log('Error: ', err)
-          }
-          else {
-            console.log("db name:"+dbname);
-            var request = new Request("CREATE database "+dbname+" COLLATE latin1_General_CS_AS", function(err, rowCount) {
-                if (err) {
-                  console.log(err);
-                } else {
-                  console.log(rowCount + ' rows');
-                }
-              });
-          
-              request.on('done', function (rowCount, more, rows) { 
-                  console.log("DB created");
-              });
-              connection.execSql(request);            
-          }         
-        });
-      
-        // Initialize the connection.
-        connection.connect(); 
-
-        // create server.instance
-        fs.readFile(config.arcserver.serverinstancetemplate, 'utf8' , (err, data) => {
-            if (err) {
-              console.error(err)
-              return
+        else{
+            
+            console.log("generate static data for:")
+            if(sd.refFile == "portfolio"){
+                
+                res = excelservice.getDistinctValues(config.contract.dataPath+data.portfolio, sd.tab, sd.uniqueColumns, sd.separator)
+                console.log(res);
             }
-            console.log(data)
-          })
+            else if(sd.refFile == "scenario"){
+                res = excelservice.getDistinctValues(config.scenario.dataPath+data.scenario, sd.tab, sd.uniqueColumns, sd.separator)
+                console.log(res);
+            }
+            else
+                console.log ("createStaticData: Invalid type of ref fil")
+        }
 
+        if(res && res.length > 0){
+            res.forEach(v => {
+                stringtowrite = stringtowrite + v+"\t"+ v+"\t"+ v+"\n"
+            } )
+                
+        }
+        console.log(sd.outputFile)
+        console.log(stringtowrite)
 
+        fs.writeFile(dest+"/"+sd.outputFile, stringtowrite, function(err) {
+            if (err) {
+               throw err;
+            }});   
+    });
 
-        return dbname;
-    }
-
-     importScenarioData(){
-
-    }
-
-     importContractData(){
-
-    }
-
-     executeComputation(){
-
-    }
-
-     exportReport(){
-
-    }
-
-    endofcomputation(){
-        //drop database
-
-        //drop folder
-    }
+    
+    console.log ("createStaticData: end");
 }
 
+//----------------------------------------------------------------------
+// Exported functions
+
+async function initEnvironment(socket, data){
+
+    var socketID = socket.id;
+
+    console.log("Socket ID:"+socketID);
+    console.log("data:"+data);
+    
+    if (!fs.existsSync(config.arcserver.tempfolder)){
+        return "Temporary folder does'nt exist"
+    }
+
+    const parent = config.arcserver.tempfolder+"/"+socketID;
+    const dirnames  = [ "config", "data", "script"];
+    
+    var dir = config.arcserver.tempfolder+"/"+socketID;
+
+    fs.mkdirSync(dir);
+    fs.mkdirSync(dir + '/config');
+    fs.mkdirSync(dir + '/data');
+    fs.mkdirSync(dir + '/data/ALMApp');
+    fs.mkdirSync(dir + '/script');
+
+    console.log("folder created");
+    
+    result = { message : "Initialisation OK"}
+
+    return result;    
+}
+
+
+async function createImportFile(socket, data){
+
+    var socketID = socket.id;
+
+    //extract portfolio file
+    console.log("Portfolio file:" + data.portfolio);
+    var res = excelservice.extractFilesFromExcelWithTemplate(config.arcserver.tempfolder+"/"+socketID+"/data/ALMApp", 
+                config.contract.dataPath+data.portfolio, config.contract.excelTemplate);
+
+    if(res == false)
+        throw( "Extract Contract file failed");
+
+    //extract scenario files
+    console.log("Scenario file:" + data.scenario);
+    var res = excelservice.extractFilesFromExcelWithTemplate(config.arcserver.tempfolder+"/"+socketID+"/data/ALMApp", 
+    config.scenario.dataPath+data.scenario, config.scenario.excelTemplate);
+
+    if(res == false)
+        throw( "Extract Scenario file failed");
+
+
+    createStaticData(socket, data, config.arcserver.tempfolder+"/"+socketID+"/data/ALMApp");
+
+
+    result = { message : "Create import files OK"}
+    return result;    
+}
+
+async function createEnvironment(socket, data, dbname){
+    var socketID = socket.id;
+        
+    var currentfolder = config.arcserver.tempfolder+"/"+socketID;
+
+    await dbmanager.executeSQL("CREATE database "+dbname+" COLLATE latin1_General_CS_AS");
+
+    var data = fs.readFileSync(config.arcserver.serverinstancetemplate,'utf8');
+                    
+    console.log("Temp folder:"+currentfolder)
+
+    data =data.replace("(ConfigurationPath)",config.arcserver.defaultconfiguration);
+    data =data.replace("(DataPath)",currentfolder+"/data");
+    data =data.replace("(DBServer)",config.databaseserver.server);
+    data =data.replace("(DBPort)",config.databaseserver.port);
+    data =data.replace("(DBName)",dbname);
+    data =data.replace("(DBUser)",config.databaseserver.login);
+    data =data.replace("(DBPassword)",config.databaseserver.password);
+
+
+    console.log(data)
+
+    fs.writeFileSync(currentfolder+"/script/server.instance", data);
+         
+    console.log('Create the repository');
+    //
+    cmd = config.arcserver.release ;
+
+    //const exitCode = await processmanager.passthru(config.arcserver.release, [cmd], {}, socket);
+    let exitCode = await processmanager.passthru(cmd, ["-i", currentfolder+"/script/server.instance", "--create-repository"], {}, socket);
+    console.log('create SID')
+
+    var theSID = dateToYMD(new Date(data.sid));
+
+     exitCode = await processmanager.passthru(cmd, 
+        ["-i"
+        , currentfolder+"/script/server.instance"
+        , "--create-situationdate"
+        , theSID
+        , "F"
+        , "--login"
+        , config.process.arcuser
+        , "--password"
+        , config.process.arcpassword
+    ], {}, socket);
+    
+
+    result = { message : "Create environment OK"}
+    return result;       
+
+}
+
+async function importData(socket, data){
+
+    var socketID = socket.id;
+        
+    var currentfolder = config.arcserver.tempfolder+"/"+socketID;
+
+    console.log('Import Data');
+    //
+    cmd = config.arcserver.release ;
+
+    var processlist = config.process.import;
+    //const exitCode = await processmanager.passthru(config.arcserver.release, [cmd], {}, socket);
+    for(const processname of processlist) {
+
+        console.log("Execute process:"+processname);
+        exitCode = await processmanager.passthru(cmd, 
+            ["-i"
+            , currentfolder+"/script/server.instance"
+            , "--execute-process"
+            , processname
+            , "--situationdate"
+            , "20171231"
+            , "F"
+            , "--login"
+            , config.process.arcuser
+            , "--password"
+            , config.process.arcpassword
+        ], {}, socket);
+    }
+
+    result = { message : "Import Data OK"}
+    return result; 
+}
+
+
+async function executeComputation(socket, data){
+
+    var socketID = socket.id;
+        
+    var currentfolder = config.arcserver.tempfolder+"/"+socketID;
+
+    console.log('Computation process');
+    //
+    cmd = config.arcserver.release ;
+
+    var processlist = config.process.computation;
+    //const exitCode = await processmanager.passthru(config.arcserver.release, [cmd], {}, socket);
+    for(const processname of processlist) {
+
+        console.log("Execute process:"+processname);
+        exitCode = await processmanager.passthru(cmd, 
+            ["-i"
+            , currentfolder+"/script/server.instance"
+            , "--execute-process"
+            , processname
+            , "--situationdate"
+            , "20171231"
+            , "F"
+            , "--login"
+            , config.process.arcuser
+            , "--password"
+            , config.process.arcpassword
+        ], {}, socket);
+    }
+    result = { message : "execute Computation OK"}
+    return result;    
+}
+
+async function exportResults(socket, data){
+
+    var socketID = socket.id;
+
+    console.log("Socket ID:"+socketID);
+    console.log("data:"+data);
+    result = { message : "export Results OK"}
+    return result;    
+}
+
+async function dropEnvironment(socket, data, dbname){
+
+    await dbmanager.executeSQL("drop database "+dbname);
+
+    result = { message : "drop Environment OK"}
+    return result;    
+}
+
+
+
 module.exports = {
-    ARCServer: ARCServer
+    initEnvironment ,
+    createImportFile,
+    createEnvironment ,
+    importData ,
+    executeComputation,
+    exportResults ,
+    dropEnvironment
 }

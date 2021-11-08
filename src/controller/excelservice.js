@@ -94,11 +94,53 @@ function extractFilesFromExcelWithTemplate(destFolder, excelfile, templatefile){
 
     if(okToExtract){
         //Retrieve the list of worksheet
-        var wFile = XLSX.readFile(excelfile);
+        //var wFile = XLSX.read(binary, {type:'binary', cellDates:true, cellNF: false, cellText:false});
+        var wFile = XLSX.readFile(excelfile, {type:'binary', cellDates:true, cellNF: false, cellText:false});
         var sheetsFile = getSheetNames(wFile);
         
         sheetsFile.forEach((sheetname) => {
-            var data = XLSX.utils.sheet_to_csv(wFile.Sheets[sheetname], { FS:"\t"})
+
+            /* console.log("-------------------");
+            var worksheet = wFile.Sheets[sheetname];
+            var headers = getHeader(worksheet);
+            var rowcount = getRowCount(worksheet);
+            var separator = "\t";
+            console.log("excelfile:"+excelfile);
+            console.log("header:"+headers);
+            console.log("rowcount:"+rowcount);
+
+            for(row = 1; row < rowcount; row++){
+                var line = "";
+                for(col = 0; col < headers.length; col++){
+                    var cell_address = { c: col, r: row };
+                    var data = XLSX.utils.encode_cell(cell_address);
+                    //console.log("data:"+data)
+                    var val = worksheet[data];
+                    //console.log("header:"+headers[col])
+                    if(val && val.v && val.v !== 'undefined' ){
+                        console.log("val"+val.v)
+                        console.log("val"+val.t)
+                        console.log("val"+val.z)
+                        console.log("val"+val.w)
+                        if((val.t === 'd' || val.t === 'n') && val.t !== 'undefined' ){
+                            val.z = 'dd/mm/yyyy';
+                            
+                        }  
+                        
+                        line = line + val.w;
+                    if(col < headers.length-1)
+                    line = line + separator;
+                }
+                
+                }
+                console.log("theline:"+line)
+            }      */    
+
+
+            var data = XLSX.utils.sheet_to_csv(wFile.Sheets[sheetname], { FS:"\t",
+                                                                        blankrows: false,
+                                                                        dateNF:'dd/mm/yyyy',
+                                                                        skipHidden:true})
             fs.writeFileSync(destFolder+"/"+sheetname+".almGenericFile", data);
 
         });
@@ -111,9 +153,59 @@ function extractFilesFromExcelWithTemplate(destFolder, excelfile, templatefile){
 }
 
 
+function getDistinctValues(filepath, tab, fields, separator)
+{
+    var res = [];
+
+    var wFile = XLSX.readFile(filepath);
+
+    console.log("Filepath:"+filepath)
+    console.log("tab:"+tab)
+    theSheet = wFile.Sheets[tab];
+    theHeaders = getHeader(theSheet);
+    console.log("theHeaders:"+theHeaders)
+    var pos = [];
+    var distinctvalues = [];
+
+    rowcount = getRowCount(theSheet);
+
+    fields.forEach((field) => {
+        const index = theHeaders.indexOf(field)
+
+        console.log("Field: "+ field + " - index: "+index)
+        if( index < 0)
+            throw "Cannot find index for distinct values"
+        
+        pos.push(index)
+    });
+
+
+    for(row = 1; row < rowcount; row++){
+        var theres = "";
+        for(col = 0; col < pos.length; col++){
+            var cell_address = { c: pos[col], r: row };
+            var data = XLSX.utils.encode_cell(cell_address);
+            //console.log("data:"+data)
+            var val = theSheet[data];
+            if(val && val.v && val.v !== 'undefined' ){
+            theres = theres + val.v;
+            if(col < pos.length-1)
+                theres = theres + separator;}
+        }
+        //console.log("the res"+theres)
+        if(theres != "")
+            distinctvalues.push(theres);
+    }
+    const uniqueString = [...new Set(distinctvalues)];
+    //console.log("full list"+ uniqueString);
+
+    return uniqueString;
+
+}
 
 
   module.exports = {
     checkFileWithTemplate,
-    extractFilesFromExcelWithTemplate
+    extractFilesFromExcelWithTemplate,
+    getDistinctValues
   };

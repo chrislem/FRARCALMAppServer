@@ -18,8 +18,7 @@ let routes = (app) => {
 
   router.get("/portfolios", computationcontroller.getPortfolios);
   router.get("/scenarios", computationcontroller.getScenarios);
-  
-
+  router.get("/facts", computationcontroller.getFactsList);
 
   app.use(router);
 };

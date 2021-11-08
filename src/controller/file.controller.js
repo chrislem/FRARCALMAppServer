@@ -2,6 +2,7 @@ const uploadFile = require("../middleware/upload");
 const fs = require("fs");
 const baseUrl = "http://localhost:8080/";
 const config = require('../../resources/config/config.json');
+const excelservice = require('./excelservice')
 
 
 const upload = async (req, res) => {
@@ -22,9 +23,11 @@ const upload = async (req, res) => {
       return res.status(400).send({ message: "Please upload a file!" });
     }
     
-    var result = filecheck.checkContract(config.contract.dataPath+req.file.originalname);
+    
+    //var result = filecheck.checkContract(config.contract.dataPath+req.file.originalname);
 
-    console.log(result);
+    //console.log(result);
+    result = {status: true}
 
     if (result.status == true)
       res.status(200).send({
