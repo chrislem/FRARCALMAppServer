@@ -135,45 +135,44 @@ async function createImportFile(socket, data){
     return result;    
 }
 
-async function createEnvironment(socket, data, dbname){
+async function createEnvironment(socket, data, dbname, sid){
     var socketID = socket.id;
         
     var currentfolder = config.arcserver.tempfolder+"/"+socketID;
 
     await dbmanager.executeSQL("CREATE database "+dbname+" COLLATE latin1_General_CS_AS");
 
-    var data = fs.readFileSync(config.arcserver.serverinstancetemplate,'utf8');
+    var instancedata = fs.readFileSync(config.arcserver.serverinstancetemplate,'utf8');
                     
     console.log("Temp folder:"+currentfolder)
 
-    data =data.replace("(ConfigurationPath)",config.arcserver.defaultconfiguration);
-    data =data.replace("(DataPath)",currentfolder+"/data");
-    data =data.replace("(DBServer)",config.databaseserver.server);
-    data =data.replace("(DBPort)",config.databaseserver.port);
-    data =data.replace("(DBName)",dbname);
-    data =data.replace("(DBUser)",config.databaseserver.login);
-    data =data.replace("(DBPassword)",config.databaseserver.password);
+    instancedata =instancedata.replace("(ConfigurationPath)",config.arcserver.defaultconfiguration);
+    instancedata =instancedata.replace("(DataPath)",currentfolder+"/data");
+    instancedata =instancedata.replace("(DBServer)",config.databaseserver.server);
+    instancedata =instancedata.replace("(DBPort)",config.databaseserver.port);
+    instancedata =instancedata.replace("(DBName)",dbname);
+    instancedata =instancedata.replace("(DBUser)",config.databaseserver.login);
+    instancedata =instancedata.replace("(DBPassword)",config.databaseserver.password);
 
 
-    console.log(data)
+    console.log(instancedata)
 
-    fs.writeFileSync(currentfolder+"/script/server.instance", data);
+    fs.writeFileSync(currentfolder+"/script/server.instance", instancedata);
          
     console.log('Create the repository');
     //
     cmd = config.arcserver.release ;
 
     //const exitCode = await processmanager.passthru(config.arcserver.release, [cmd], {}, socket);
-    let exitCode = await processmanager.passthru(cmd, ["-i", currentfolder+"/script/server.instance", "--create-repository"], {}, socket);
-    console.log('create SID')
+   let exitCode = await processmanager.passthru(cmd, ["-i", currentfolder+"/script/server.instance", "--create-repository"], {}, socket);
+    
 
-    var theSID = dateToYMD(new Date(data.sid));
 
      exitCode = await processmanager.passthru(cmd, 
         ["-i"
         , currentfolder+"/script/server.instance"
         , "--create-situationdate"
-        , theSID
+        , sid
         , "F"
         , "--login"
         , config.process.arcuser
@@ -187,7 +186,7 @@ async function createEnvironment(socket, data, dbname){
 
 }
 
-async function importData(socket, data){
+async function importData(socket, data, sid){
 
     var socketID = socket.id;
         
@@ -208,8 +207,7 @@ async function importData(socket, data){
             , "--execute-process"
             , processname
             , "--situationdate"
-            , "20171231"
-            , "F"
+            , sid+"F"
             , "--login"
             , config.process.arcuser
             , "--password"
@@ -222,7 +220,7 @@ async function importData(socket, data){
 }
 
 
-async function executeComputation(socket, data){
+async function executeComputation(socket, data, sid){
 
     var socketID = socket.id;
         
@@ -243,8 +241,7 @@ async function executeComputation(socket, data){
             , "--execute-process"
             , processname
             , "--situationdate"
-            , "20171231"
-            , "F"
+            , sid+"F"
             , "--login"
             , config.process.arcuser
             , "--password"
@@ -255,7 +252,7 @@ async function executeComputation(socket, data){
     return result;    
 }
 
-async function exportResults(socket, data){
+async function exportResults(socket, data, sid){
 
     var socketID = socket.id;
 
@@ -282,5 +279,6 @@ module.exports = {
     importData ,
     executeComputation,
     exportResults ,
-    dropEnvironment
+    dropEnvironment, 
+    dateToYMD
 }

@@ -95,26 +95,31 @@ async function startComputation(socket, data) {
     'O.P. known rate'
   ]
   }*/
-    /*var res = await arcserver.initEnvironment(socket, data);
+
+
+    var theSID = arcserver.dateToYMD(new Date(data.sid));
+    console.log('create SID:'+theSID + "("+ data.sid+")")
+
+    var res = await arcserver.initEnvironment(socket, data);
     socket.emit('notification', res.message);
 
     res = await arcserver.createImportFile(socket, data);
     socket.emit('notification', res.message);
 
-    res = await arcserver.createEnvironment(socket, data, dbname);
+    res = await arcserver.createEnvironment(socket, data, dbname, theSID);
     socket.emit('notification', res.message);
 
-    res = await arcserver.importData(socket, data);
+    res = await arcserver.importData(socket, data, theSID);
     socket.emit('notification', res.message);
 
-    res = await arcserver.executeComputation(socket, data);
+    res = await arcserver.executeComputation(socket, data, theSID);
     socket.emit('notification', res.message);
 
-    res = await arcserver.exportResults(socket, data);
+    res = await arcserver.exportResults(socket, data, theSID);
     socket.emit('notification', res.message);
 
     res = await arcserver.dropEnvironment(socket, data, dbname);
-    socket.emit('notification', res.message);*/
+    socket.emit('notification', res.message);
 
   }
   catch (err) {
